@@ -27,7 +27,6 @@ driver.find_element_by_xpath("//input[@name='user[password]']").clear()
 driver.find_element_by_xpath("//input[@name='user[password]']").send_keys('project0808')
 driver.find_element_by_xpath("//input[@name='commit']").click()
 time.sleep(10)
-driver.get('https://www.turbosquid.com/AssetManager/Index.cfm?stgAction=getFiles&subAction=Download&intID=1447788&intType=3')
 
 
 driver.get('https://www.turbosquid.com/Login/Index.cfm')
