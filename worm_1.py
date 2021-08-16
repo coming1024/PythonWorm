@@ -27,6 +27,7 @@ driver.find_element_by_xpath("//input[@name='user[password]']").clear()
 driver.find_element_by_xpath("//input[@name='user[password]']").send_keys('project0808')
 driver.find_element_by_xpath("//input[@name='commit']").click()
 time.sleep(10)
+# driver.get('https://www.turbosquid.com/AssetManager/Index.cfm?stgAction=getFiles&subAction=Download&intID=1447788&intType=3')
 
 
 driver.get('https://www.turbosquid.com/Login/Index.cfm')
@@ -53,10 +54,10 @@ with open('cookie.txt', 'r', encoding='utf-8') as f:
     cookie = f.read()
 cookies = json.loads(cookie)
 
-# ------------------爬取带参数的get请求-------------------爬取新浪新闻，指定的内容
 # 1.寻找基础url
-formats = 'obj'
-key = 'people'  # 搜索内容
+formats = 'obj'  # 确定文件格式
+key = 'tree'  # 搜索内容
+download_num = 4  # 下载数量
 
 base_url = 'https://www.turbosquid.com/3d-model/free/'+key+'/'+formats
 download_url = 'https://www.turbosquid.com/AssetManager/Index.cfm'
@@ -65,7 +66,7 @@ headers = {
     'user-agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36',
 }
 params = {
-    'synonym': key,
+    'synonym': key
 }
 
 # driver.get(download_url, cookies=cookies, headers=headers, params=download_params)
@@ -73,20 +74,45 @@ response = requests.get(base_url, cookies=cookies, headers=headers, params=param
 demo = response.text
 soup = BeautifulSoup(demo, "html.parser")
 # print(soup.prettify())
-soup2 = soup.find("div", "AssetInner").find("div", "thumbnail thumbnail-md")
-print(soup2['data-id'])
-identifier = soup2['data-id']
+for i in range(download_num):
+    if i == 0:
+        soup2 = soup.find("div", "AssetInner").find("div", "thumbnail thumbnail-md")
+    else:
+        soup2 = soup2.find_next("div", "thumbnail thumbnail-md")
+    check_url = soup2.find('a')["href"]
+    check_response = requests.get(check_url, cookies=cookies)
+    demo_free = check_response.text
+    soup_check = BeautifulSoup(demo_free, "html.parser")
+    if soup_check.find("div", "priceSection price").find("span")["class"] == ['price', 'free-price']:
+        identifier = soup2['data-id']
+        print(soup2['data-id'])
+        # 跳转至对应模型的下载页面
+        driver.get('https://www.turbosquid.com/AssetManager/Index.cfm?stgAction=getFiles&subAction=Download&intID='+identifier+'&intType=3')
+        driver.find_element_by_xpath("//div[@id='ProductFileRow"+identifier+"']").find_element_by_xpath("//span[@class='mainFileName']").click()
 
-driver.get('https://www.turbosquid.com/AssetManager/Index.cfm?stgAction=getFiles&subAction=Download&intID='+identifier+'&intType=3')
-driver.find_element_by_xpath("//div[@id='ProductFileRow"+identifier+"']").find_element_by_xpath("//span[@class='mainFileName']").click()
+        #---------------------延迟操作-----------------------#
+        time.sleep(30)
+        #--------------------------------------------------#
+
+        driver.find_element_by_xpath("//input[@id='cbItemAll']").click()
+        driver.find_element_by_xpath("//div[@id='miRemove']").click()
+        driver.find_element_by_xpath("//span[@class='yui-button yui-push-button btn_remove']").click()
+        time.sleep(5)
+    else:
+        print("This model is not free!")
+
+
+
+
+
 '''download_params = {
     'stgAction': 'getFiles',
     'subAction': 'Download',
     'intID': identifier,
     'intType': 3
-}'''
+}
 
-'''download_response = requests.get(download_url, cookies=cookies, headers=headers, params=download_params)
+download_response = requests.get(download_url, cookies=cookies, headers=headers, params=download_params)
 print(download_response.url)
 
 demo2 = download_response.text
@@ -104,5 +130,6 @@ response = requests.get(base_url, headers=headers)
 demo = response.text
 soup = BeautifulSoup(demo, "html.parser")
 print(soup.find('div', 'search-result'))'''
+
 
 
